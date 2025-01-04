@@ -1,0 +1,51 @@
+#services defines all the different containers we will create.
+services:
+  mysqldb: # This is the name of database service
+    image: 'mysql:latest'  # this is image pull from docker hub and run
+    environment:  # user and password set in docker container database
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=dockerLearnDatabase
+    ports:
+       - "3307:3306"
+    container_name: "mysqldb" # it is container name
+    healthcheck: # this will check the health of mysql services
+      test: ['CMD','mysqladmin','ping','-h','localhost']
+      timeout: 20s
+      retries: 10
+    networks: # Connect this service to the custom network
+      my_custom_network:
+         ipv4_address: 192.168.1.100 # Assign a unique IP address
+
+
+
+  docker-my-project:  # services name of docker demo project
+    build: ./
+    container_name: my-spring-project
+    ports:
+      - "8081:8080"  # Map host port 8081 to container port 8080
+    volumes: # mount binding with outside txt to container txt file
+      - ./client_data.txt:/myapp/client_data.txt
+    depends_on:
+       mysqldb:
+         condition: service_healthy
+
+    networks: # Connect this service to the custom network
+      my_custom_network:
+        ipv4_address: 192.168.1.101 # Assign a unique IP address
+
+
+
+# Define custom networks
+networks:
+  my_custom_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24 # Define a subnet for the custom network
+
+
+
+
+
+
+
